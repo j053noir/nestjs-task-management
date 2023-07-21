@@ -13,7 +13,7 @@ import { CreateTaskDto } from './DTOs/create-task.dto';
 import { GetTasksFilterDto } from './DTOs/get-tasks-filter.dto';
 import { UpdateTaskStatusDto } from './DTOs/update-task-status.dto';
 import { UpdateTaskDto } from './DTOs/update-task.dto';
-import { Task } from './task.model';
+import { Task } from './task.entity';
 import { TasksService } from './tasks.service';
 
 @Controller('tasks')
@@ -26,30 +26,33 @@ export class TasksController {
   }
 
   @Get()
-  getTasks(@Query() filterDto: GetTasksFilterDto): Task[] {
+  getTasks(@Query() filterDto: GetTasksFilterDto): Promise<Task[]> {
     return this.tasksService.getTasks(filterDto);
   }
 
   @Get('/:id')
-  getTask(@Param('id') id: string): Task {
+  getTask(@Param('id') id: string): Promise<Task> {
     return this.tasksService.getTaskById(id);
   }
 
   @Post()
-  createTask(@Body() createTaskDto: CreateTaskDto): Task {
+  createTask(@Body() createTaskDto: CreateTaskDto): Promise<Task> {
     return this.tasksService.createTask(createTaskDto);
   }
 
   @Delete('/:id')
-  deleteTask(@Param('id') id: string): Task {
-    return this.tasksService.deleteTask(id);
+  deleteTask(
+    @Param('id') id: string,
+    @Query('soft-delete') soft_delete?: boolean,
+  ): Promise<Task> {
+    return this.tasksService.deleteTask(id, soft_delete);
   }
 
   @Patch('/:id/status')
   updateTaskStatus(
     @Param('id') id: string,
     @Body() updateTaskStatusDto: UpdateTaskStatusDto,
-  ): Task {
+  ): Promise<Task> {
     return this.tasksService.updateTaskStatus(id, updateTaskStatusDto);
   }
 
@@ -57,7 +60,7 @@ export class TasksController {
   updateTask(
     @Param('id') id: string,
     @Body() updateTaskDto: UpdateTaskDto,
-  ): Task {
+  ): Promise<Task> {
     return this.tasksService.updateTaskStatus(id, updateTaskDto);
   }
 }
