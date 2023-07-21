@@ -18,6 +18,11 @@ import { TasksService } from './tasks.service';
 export class TasksController {
   constructor(private tasksService: TasksService) {}
 
+  @Get('statuses')
+  getAllTaskStatuses(): string[] {
+    return this.tasksService.getAllTaskStatuses();
+  }
+
   @Get()
   getAllTasks(): Task[] {
     return this.tasksService.getAllTasks();

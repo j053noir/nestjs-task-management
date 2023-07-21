@@ -9,6 +9,10 @@ import { Task, TaskStatus } from './task.model';
 export class TasksService {
   private tasks: Task[] = [];
 
+  public getAllTaskStatuses(): string[] {
+    return Object.values(TaskStatus);
+  }
+
   public getAllTasks(): Task[] {
     return this.tasks;
   }
