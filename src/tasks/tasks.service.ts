@@ -46,8 +46,8 @@ export class TasksService {
     return query.getMany();
   }
 
-  public async getTaskById(id: string): Promise<Task> {
-    const task = await this.taskRepository.findOneBy({ id });
+  public async getTaskById(id: string, user: User): Promise<Task> {
+    const task = await this.taskRepository.findOneBy({ id, user });
 
     if (!task) this.throwNotFoundException(id);
 
