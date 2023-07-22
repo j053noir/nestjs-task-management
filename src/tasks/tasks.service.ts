@@ -70,8 +70,12 @@ export class TasksService {
     return await this.taskRepository.save(task);
   }
 
-  public async deleteTask(id: string, soft_delete: boolean): Promise<Task> {
-    const task = await this.taskRepository.findOneBy({ id });
+  public async deleteTask(
+    id: string,
+    user: User,
+    soft_delete?: boolean,
+  ): Promise<Task> {
+    const task = await this.taskRepository.findOneBy({ id, user });
 
     if (!task) this.throwNotFoundException(id);
 
@@ -86,8 +90,9 @@ export class TasksService {
   public async updateTaskStatus(
     id: string,
     updateTaskStatusDto: UpdateTaskStatusDto,
+    user: User,
   ): Promise<Task> {
-    const task = await this.taskRepository.findOneBy({ id });
+    const task = await this.taskRepository.findOneBy({ id, user });
 
     if (!task) this.throwNotFoundException(id);
 
@@ -99,8 +104,9 @@ export class TasksService {
   public async updateTask(
     id: string,
     updateTask: UpdateTaskDto,
+    user: User,
   ): Promise<Task> {
-    const task = await this.taskRepository.findOneBy({ id });
+    const task = await this.taskRepository.findOneBy({ id, user });
 
     if (!task) this.throwNotFoundException(id);
 

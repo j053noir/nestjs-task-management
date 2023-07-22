@@ -54,24 +54,27 @@ export class TasksController {
   @Delete('/:id')
   deleteTask(
     @Param('id') id: string,
+    @GetUser() user: User,
     @Query('soft-delete') soft_delete?: boolean,
   ): Promise<Task> {
-    return this.tasksService.deleteTask(id, soft_delete);
+    return this.tasksService.deleteTask(id, user, soft_delete);
   }
 
   @Patch('/:id/status')
   updateTaskStatus(
     @Param('id') id: string,
     @Body() updateTaskStatusDto: UpdateTaskStatusDto,
+    @GetUser() user,
   ): Promise<Task> {
-    return this.tasksService.updateTaskStatus(id, updateTaskStatusDto);
+    return this.tasksService.updateTaskStatus(id, updateTaskStatusDto, user);
   }
 
   @Put('/:id')
   updateTask(
     @Param('id') id: string,
     @Body() updateTaskDto: UpdateTaskDto,
+    @GetUser() user,
   ): Promise<Task> {
-    return this.tasksService.updateTaskStatus(id, updateTaskDto);
+    return this.tasksService.updateTask(id, updateTaskDto, user);
   }
 }
