@@ -19,7 +19,10 @@ export class TasksService {
     return Object.values(TaskStatus);
   }
 
-  public async getTasks(filterDto?: GetTasksFilterDto): Promise<Task[]> {
+  public async getTasks(
+    user: User,
+    filterDto?: GetTasksFilterDto,
+  ): Promise<Task[]> {
     const { status, search } = filterDto;
 
     const query = await this.taskRepository
@@ -37,6 +40,8 @@ export class TasksService {
         { search: `%${term}%` },
       );
     }
+
+    query.andWhere({ user });
 
     return query.getMany();
   }
