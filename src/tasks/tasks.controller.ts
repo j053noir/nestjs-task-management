@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Logger,
   Param,
   Patch,
   Post,
@@ -23,10 +24,13 @@ import { TasksService } from './tasks.service';
 @UseGuards(AuthGuard())
 @Controller('tasks')
 export class TasksController {
+  private logger = new Logger('TaskController');
+
   constructor(private tasksService: TasksService) {}
 
   @Get('statuses')
   getTaskStatuses(): string[] {
+    this.logger.verbose('GET retrieving all task statuses');
     return this.tasksService.getAllTaskStatuses();
   }
 
@@ -35,11 +39,15 @@ export class TasksController {
     @Query() filterDto: GetTasksFilterDto,
     @GetUser() user: User,
   ): Promise<Task[]> {
+    this.logger.verbose(
+      `GET ${user.id} retrieving tasks. Filters: ${JSON.stringify(filterDto)}`,
+    );
     return this.tasksService.getTasks(user, filterDto);
   }
 
   @Get('/:id')
   getTask(@Param('id') id: string, @GetUser() user: User): Promise<Task> {
+    this.logger.verbose(`GET ${user.id} retrieving tasks with id ${id}`);
     return this.tasksService.getTaskById(id, user);
   }
 
@@ -48,6 +56,11 @@ export class TasksController {
     @Body() createTaskDto: CreateTaskDto,
     @GetUser() user: User,
   ): Promise<Task> {
+    this.logger.verbose(
+      `POST ${user.id} creating task with parameters ${JSON.stringify(
+        createTaskDto,
+      )}`,
+    );
     return this.tasksService.createTask(createTaskDto, user);
   }
 
@@ -57,6 +70,9 @@ export class TasksController {
     @GetUser() user: User,
     @Query('soft-delete') soft_delete?: boolean,
   ): Promise<Task> {
+    this.logger.verbose(
+      `DELETE ${user.id} deleting task with id ${id}. Soft delete: ${soft_delete}`,
+    );
     return this.tasksService.deleteTask(id, user, soft_delete);
   }
 
@@ -64,8 +80,13 @@ export class TasksController {
   updateTaskStatus(
     @Param('id') id: string,
     @Body() updateTaskStatusDto: UpdateTaskStatusDto,
-    @GetUser() user,
+    @GetUser() user: User,
   ): Promise<Task> {
+    this.logger.verbose(
+      `PATCH ${user.id} updating task status with parameters ${JSON.stringify(
+        updateTaskStatusDto,
+      )}`,
+    );
     return this.tasksService.updateTaskStatus(id, updateTaskStatusDto, user);
   }
 
@@ -73,8 +94,13 @@ export class TasksController {
   updateTask(
     @Param('id') id: string,
     @Body() updateTaskDto: UpdateTaskDto,
-    @GetUser() user,
+    @GetUser() user: User,
   ): Promise<Task> {
+    this.logger.verbose(
+      `PUT ${user.id} updating task with parameters ${JSON.stringify(
+        updateTaskDto,
+      )}`,
+    );
     return this.tasksService.updateTask(id, updateTaskDto, user);
   }
 }
