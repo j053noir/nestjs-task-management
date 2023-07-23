@@ -1,4 +1,4 @@
-import { IsEnum, IsNotEmpty } from 'class-validator';
+import { IsBoolean, IsEnum, IsNotEmpty } from 'class-validator';
 import { TaskStatus } from '../task-status.enum';
 
 export class UpdateTaskDto {
@@ -10,4 +10,7 @@ export class UpdateTaskDto {
 
   @IsEnum(TaskStatus)
   status: TaskStatus;
+
+  @IsBoolean()
+  isDeleted: boolean;
 }

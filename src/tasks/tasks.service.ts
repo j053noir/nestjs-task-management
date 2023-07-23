@@ -1,19 +1,24 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { NotFoundException } from '@nestjs/common/exceptions';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
+import { ObjectNotFoundError } from 'src/utils/ObjectNotFound.error';
 import { User } from '../auth/user.entity';
-import { Repository } from 'typeorm';
 import { CreateTaskDto } from './DTOs/create-task.dto';
 import { GetTasksFilterDto } from './DTOs/get-tasks-filter.dto';
 import { UpdateTaskStatusDto } from './DTOs/update-task-status.dto';
 import { UpdateTaskDto } from './DTOs/update-task.dto';
 import { TaskStatus } from './task-status.enum';
 import { Task } from './task.entity';
+import { TaskRepository } from './task.repository';
 
 @Injectable()
 export class TasksService {
-  constructor(
-    @Inject('TASK_REPOSITORY') private taskRepository: Repository<Task>,
-  ) {}
+  private logger = new Logger('TaskService');
+
+  constructor(private taskRepository: TaskRepository) {}
 
   public getAllTaskStatuses(): string[] {
     return Object.values(TaskStatus);
@@ -23,33 +28,17 @@ export class TasksService {
     user: User,
     filterDto?: GetTasksFilterDto,
   ): Promise<Task[]> {
-    const { status, search } = filterDto;
-
-    const query = await this.taskRepository
-      .createQueryBuilder('task')
-      .where('task.isDeleted = false');
-
-    if (status) {
-      query.andWhere('task.status = :status', { status });
-    }
-
-    if (search) {
-      const term = search.toLocaleLowerCase();
-      query.andWhere(
-        'LOWER(task.title) LIKE :search OR LOWER(task.description) LIKE :search',
-        { search: `%${term}%` },
-      );
-    }
-
-    query.andWhere({ user });
-
-    return query.getMany();
+    return await this.taskRepository.getTasks(user, filterDto);
   }
 
   public async getTaskById(id: string, user: User): Promise<Task> {
-    const task = await this.taskRepository.findOneBy({ id, user });
+    let task: Task;
 
-    if (!task) this.throwNotFoundException(id);
+    try {
+      task = await this.taskRepository.getTaskById(id, user);
+    } catch (err) {
+      this.handleError(err, id);
+    }
 
     return task;
   }
@@ -58,16 +47,15 @@ export class TasksService {
     createTaskDto: CreateTaskDto,
     user: User,
   ): Promise<Task> {
-    const { title, description } = createTaskDto;
+    let task: Task;
 
-    const task = this.taskRepository.create({
-      title,
-      description,
-      status: TaskStatus.OPEN,
-      user,
-    });
+    try {
+      task = await this.taskRepository.createTask(createTaskDto, user);
+    } catch (err) {
+      this.handleError(err);
+    }
 
-    return await this.taskRepository.save(task);
+    return task;
   }
 
   public async deleteTask(
@@ -75,16 +63,15 @@ export class TasksService {
     user: User,
     soft_delete?: boolean,
   ): Promise<Task> {
-    const task = await this.taskRepository.findOneBy({ id, user });
+    let task: Task;
 
-    if (!task) this.throwNotFoundException(id);
-
-    if (soft_delete) {
-      task.isDeleted = true;
-      return await this.taskRepository.save(task);
-    } else {
-      return await this.taskRepository.remove(task);
+    try {
+      task = await this.taskRepository.deleteTask(id, user, soft_delete);
+    } catch (err) {
+      this.handleError(err, id);
     }
+
+    return task;
   }
 
   public async updateTaskStatus(
@@ -92,13 +79,19 @@ export class TasksService {
     updateTaskStatusDto: UpdateTaskStatusDto,
     user: User,
   ): Promise<Task> {
-    const task = await this.taskRepository.findOneBy({ id, user });
+    let task: Task;
 
-    if (!task) this.throwNotFoundException(id);
+    try {
+      task = await this.taskRepository.updateTaskStatus(
+        id,
+        updateTaskStatusDto,
+        user,
+      );
+    } catch (err) {
+      this.handleError(err, id);
+    }
 
-    task.status = updateTaskStatusDto.status;
-
-    return await this.taskRepository.save(task);
+    return task;
   }
 
   public async updateTask(
@@ -106,17 +99,26 @@ export class TasksService {
     updateTask: UpdateTaskDto,
     user: User,
   ): Promise<Task> {
-    const task = await this.taskRepository.findOneBy({ id, user });
+    let task: Task;
 
-    if (!task) this.throwNotFoundException(id);
+    try {
+      task = await this.taskRepository.updateTask(id, updateTask, user);
+    } catch (err) {
+      this.handleError(err, id);
+    }
 
-    task.title = updateTask.title;
-    task.description = updateTask.description;
-
-    return this.taskRepository.save(task);
+    return task;
   }
 
-  private throwNotFoundException(id: string): void {
-    throw new NotFoundException(`Task with ID "${id}" not found`);
+  private handleError(err: Error, taskId?: string): void {
+    if (err instanceof ObjectNotFoundError) this.throwNotFoundException(taskId);
+    else {
+      this.logger.error(err.message, err.stack);
+      throw new InternalServerErrorException();
+    }
+  }
+
+  private throwNotFoundException(taskId: string): void {
+    throw new NotFoundException(`Task with ID "${taskId}" not found`);
   }
 }
