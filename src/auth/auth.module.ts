@@ -4,7 +4,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { DatabaseModule } from '../database/database.module';
 import { AuthController } from './auth.controller';
-import { authProviders } from './auth.provider';
+import { AuthRepository } from './auth.repository';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt-strategy';
 
@@ -23,7 +23,7 @@ import { JwtStrategy } from './jwt-strategy';
       inject: [ConfigService],
     }),
   ],
-  providers: [...authProviders, JwtStrategy, AuthService],
+  providers: [AuthRepository, JwtStrategy, AuthService],
   controllers: [AuthController],
   exports: [JwtStrategy, PassportModule],
 })

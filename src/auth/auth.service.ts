@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
   BadRequestException,
   ConflictException,
@@ -6,34 +6,21 @@ import {
 } from '@nestjs/common/exceptions';
 import { UnauthorizedException } from '@nestjs/common/exceptions/unauthorized.exception';
 import { JwtService } from '@nestjs/jwt/dist';
-import * as bcrypt from 'bcrypt';
-import { Repository } from 'typeorm';
+import { AuthRepository } from './auth.repository';
 import { AuthCredentialsDto } from './DTOs/auth-crendential.dto';
 import { JwtPayload } from './jwt-payload.interface';
 import { JwtResponse } from './jwt-response.interface';
-import { User } from './user.entity';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @Inject('USER_REPOSITORY') private userRepository: Repository<User>,
+    private authRepository: AuthRepository,
     private jwtService: JwtService,
   ) {}
 
   public async CreateUser(createUserDto: AuthCredentialsDto): Promise<void> {
-    const { username, password } = createUserDto;
-
-    const salt = await bcrypt.genSalt();
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    const user = this.userRepository.create({
-      username,
-      password: hashedPassword,
-      isActive: true,
-    });
-
     try {
-      this.userRepository.save(user);
+      this.authRepository.CreateUser(createUserDto);
     } catch (error) {
       if (error.code === '23505')
         throw new ConflictException('Username is not available');
@@ -49,9 +36,9 @@ export class AuthService {
     if (!username || !password)
       throw new BadRequestException('Please provide a username and password');
 
-    const user = await this.userRepository.findOneBy({ username });
+    const isValid = await this.authRepository.VerifyUser(autheCredentialsDto);
 
-    if (!user || !(await bcrypt.compare(password, user.password))) {
+    if (!isValid) {
       throw new UnauthorizedException('Please validate your credentials');
     }
 
