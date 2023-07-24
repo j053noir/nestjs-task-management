@@ -4,7 +4,7 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { ObjectNotFoundError } from 'src/utils/ObjectNotFound.error';
+import { ObjectNotFoundError } from '../utils/ObjectNotFound.error';
 import { User } from '../auth/user.entity';
 import { CreateTaskDto } from './DTOs/create-task.dto';
 import { GetTasksFilterDto } from './DTOs/get-tasks-filter.dto';
