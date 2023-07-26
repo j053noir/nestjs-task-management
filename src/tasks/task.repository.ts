@@ -17,7 +17,7 @@ export class TaskRepository extends Repository<Task> {
 
   public async getTasks(
     user: User,
-    filterDto?: GetTasksFilterDto,
+    filterDto: GetTasksFilterDto = {},
   ): Promise<Task[]> {
     const { status, search } = filterDto;
 
